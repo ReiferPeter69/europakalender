@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Europäischer Adventskalender</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Merriweather:ital,wght@0,300;0,700;1,400&family=Poppins:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* --- 1. DESIGN & VARIABLEN --- */
+        :root {
+            --bg-dark: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #334155 0%, #020617 100%);
+            --gold: #fbbf24;
+            --gold-glow: #f59e0b;
+            --red: #dc2626;
+            --glass-surface: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* --- 2. HINTERGRUND (SCHNEE & STERNE) --- */
+        #snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: #fff;
+            opacity: 0.8;
+            top: -20px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(105vh) rotate(360deg);
+            }
+        }
+
+        /* --- 3. HEADER --- */
+        header {
+            text-align: center;
+            margin: 40px 20px 30px;
+            z-index: 10;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(3.5rem, 8vw, 6rem);
+            margin: 0;
+            background: linear-gradient(180deg, #fff, var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.4));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .subtitle {
+            font-family: 'Merriweather', serif;
+            font-style: italic;
+            color: var(--gold);
+            font-size: 1.2rem;
+            margin-top: -10px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* --- 4. GRID LAYOUT --- */
+        .calendar-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            z-index: 10;
+            margin-bottom: 50px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 25px;
+            perspective: 1000px;
+        }
+
+        /* --- 5. TÜR DESIGN (3D FLIP) --- */
+        .door-container {
+            position: relative;
+            aspect-ratio: 1;
+            /* Quadratisch */
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .door-front,
+        .door-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* VORDERSEITE (GESCHENK-OPTIK) */
+        .door-front {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        /* HOVER EFFEKT */
+        .door-container:not(.open):hover .door-front {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            transform: scale(1.02);
+        }
+
+        .door-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            font-family: 'Great Vibes', cursive;
+        }
+
+        /* Dekorative Bänder auf der Tür */
+        .ribbon-v {
+            position: absolute;
+            width: 18px;
+            height: 100%;
+            background: var(--red);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .ribbon-h {
+            position: absolute;
+            width: 100%;
+            height: 18px;
+            background: var(--red);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* RÜCKSEITE (FLAGGE / VORSCHAU) */
+        .door-back {
+            background: linear-gradient(135deg, #fff, #e2e8f0);
+            transform: rotateY(180deg);
+            color: #1e293b;
+            flex-direction: column;
+        }
+
+        .country-code {
+            font-size: 4rem;
+            opacity: 0.8;
+        }
+
+        .click-hint {
+            font-size: 0.8rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        /* OFFEN STATUS */
+        .door-container.open {
+            transform: rotateY(180deg);
+            cursor: pointer;
+            /* Wichtig: Zeigt an, dass man nochmal klicken kann */
+        }
+
+        /* LOCKED ANIMATION */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        /* --- 6. MODAL (POPUP TEXT) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: #1e293b;
+            /* Dunkelblau */
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 60px rgba(251, 191, 36, 0.2);
+            overflow: hidden;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            background: linear-gradient(90deg, var(--gold), #fcd34d);
+            padding: 20px;
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .country-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.5rem;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .native-greeting {
+            font-family: 'Merriweather', serif;
+            font-style: italic;
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .modal-text {
+            font-family: 'Merriweather', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .modal-fact {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 3px solid var(--gold);
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 5;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        #timer {
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 1.5rem;
+            color: var(--red);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .door-number {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="snow-container"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <header>
+        <h1>Europa Adventskalender</h1>
+        <p class="subtitle">Entdecke Weihnachtsbräuche aus 24 Ländern</p>
+    </header>
+
+    <div class="calendar-wrapper">
+        <div class="grid" id="calendar-grid">
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-card">
+            <span class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></span>
+            <div id="modal-header-content" class="modal-header">
+            </div>
+            <div id="modal-body-content" class="modal-body">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. EINSTELLUNGEN ---
+
+        // !!! WICHTIG !!! 
+        // Setze TEST_MODUS auf true, um alle Türen sofort zu öffnen (zum Testen).
+        // Setze TEST_MODUS auf false, damit der Kalender erst ab 1. Dezember funktioniert.
+        const TEST_MODUS = false;
+
+        // --- 2. DATEN ---
+        const calendarData = [
+            { day: 1, country: "Bulgarien", greeting: "Vesela Koleda!", icon: "🇧🇬", text: "In Bulgarien beginnt die Weihnachtszeit mit 40 Tagen Adventsfasten. Am Heiligabend gibt es ein Festessen mit einer ungeraden Anzahl an Gerichten. Ein Highlight ist das Brot mit einer versteckten Münze – wer sie findet, hat im neuen Jahr Glück." },
+            { day: 2, country: "Malta", greeting: "Il-Milied it-Tajjeb!", icon: "🇲🇹", text: "In Malta ist es im Dezember meist 15-20 Grad warm. Weihnachtsstimmung wird kreativ erzeugt: Einkaufszentren und Weihnachtsmärkte nutzen oft Schneekanonen und Schaummaschinen, um künstlichen Schnee zu erzeugen." },
+            { day: 3, country: "Österreich", greeting: "Frohe Weihnachten!", icon: "🇦🇹", text: "Der Wiener Christkindlmarkt ist einer der ältesten Europas (seit 1296). Wien wählt jedes Jahr ein offizielles 'Christkind', das den Markt eröffnet und als weihnachtliche Botschafterin auftritt." },
+            { day: 4, country: "Zypern", greeting: "Kala Christougenna!", icon: "🇨🇾", text: "Auf Zypern werden traditionell nicht nur Bäume geschmückt, sondern auch Schiffsmodelle! Ursprünglich taten das Familien, um Seeleute zu begrüßen. Heute stehen die verzierten Schiffe in vielen Häusern." },
+            { day: 5, country: "Niederlande", greeting: "Vrolijk Kerstfeest!", icon: "🇳🇱", text: "Hier beginnt die festliche Zeit schon Mitte November mit der Ankunft des Sinterklaas. Er kommt traditionell mit einem Dampfschiff aus Spanien an. Die Ankunft wird live im Fernsehen übertragen." },
+            { day: 6, country: "Belgien", greeting: "Vrolijk Kersfeest!", icon: "🇧🇪", text: "In Belgien wird am 6. Dezember Sinterklaas gefeiert. Man stellt nicht nur Milch und Kekse bereit, sondern unbedingt auch Karotten für den Esel oder das Pferd des Sinterklaas." },
+            { day: 7, country: "Estland", greeting: "Häid Jõule!", icon: "🇪🇪", text: "Früher aß man in Estland 7, 9 oder 12 Portionen, um Glück zu haben. Wichtig: Nicht unter den Tisch schauen (dort wohnen Geister!) und heruntergefallenes Essen nicht aufheben – es gehört den Göttern." },
+            { day: 8, country: "Italien", greeting: "Buon Natale!", icon: "🇮🇹", text: "Die italienische Weihnacht beginnt oft schon am 8. Dezember (Mariä Empfängnis), wenn der Baum aufgestellt wird, und endet erst am 6. Januar mit der Heiligen Drei Könige." },
+            { day: 9, country: "Lettland", greeting: "Priecīgas Ziemassvētku!", icon: "🇱🇻", text: "Während der lettischen Weihnachtszeit (Ziemassvētki) ziehen maskierte Gruppen von Haus zu Haus, um dort zu singen und zu tanzen." },
+            { day: 10, country: "Luxemburg", greeting: "Schéi Chrëschtdeeg!", icon: "🇱🇺", text: "Luxemburg ist sehr vielfältig. In den Kirchen gibt es zur Weihnachtszeit Gottesdienste in vielen Sprachen: Luxemburgisch, Deutsch, Französisch und oft auch Portugiesisch." },
+            { day: 11, country: "Ungarn", greeting: "Boldog Karácsonyt!", icon: "🇭🇺", text: "Viele Schulen pflegen die Tradition der 'Adventlichen Fenster'. Jede Klasse gestaltet ein dekoriertes Fenster oder führt etwas vor, wodurch ein lebendiger Adventskalender im Schulgebäude entsteht." },
+            { day: 12, country: "Kroatien", greeting: "Sretan Božić!", icon: "🇭🇷", text: "Die Kroaten pflegen den Brauch 'Badnjak': Zur Weihnachtszeit werden Stämme und Äste junger Eichen verbrannt. Das symbolisiert die Ankunft Jesu und soll Hoffnung spenden." },
+            { day: 13, country: "Schweden", greeting: "God Jul!", icon: "🇸🇪", text: "Um 15 Uhr schaut ganz Schweden 'Donald Duck' im Fernsehen. Zum Essen gibt es Julbord (Buffet) mit Schinken und Hering. Am 13. Januar (St. Knut) werden die Weihnachtsbäume dann traditionell aus dem Fenster geworfen." },
+            { day: 14, country: "Slowenien", greeting: "Vesel Božič!", icon: "🇸🇮", text: "Hier gibt es gleich drei Gabenbringer: Miklavž (6. Dez.), Božiček (Weihnachtsmann am 25. Dez.) und Dedek Mraz (Väterchen Frost zu Neujahr)." },
+            { day: 15, country: "Litauen", greeting: "Linksmų Kalėdų!", icon: "🇱🇹", text: "Am 24. Dezember gibt es das traditionelle 'Kūčios': Ein 12-gängiges, komplett fleischloses Festessen, das alte Bräuche mit christlichen Traditionen vereint." },
+            { day: 16, country: "Tschechien", greeting: "Veselé Vánoce!", icon: "🇨🇿", text: "Der Karpfen gehört hier zum Fest wie der Tannenbaum. Früher kauften Familien ihn lebend und ließen ihn einige Tage in der heimischen Badewanne schwimmen, bevor er zubereitet wurde." },
+            { day: 17, country: "Polen", greeting: "Wesołych Świąt!", icon: "🇵🇱", text: "Das Fest 'Wigilia' beginnt mit dem ersten Stern am Himmel. Es gibt 12 fleischlose Gerichte. Oft legt man Heu unter die Tischdecke (Erinnerung an die Krippe) und lässt einen Platz für unerwartete Gäste frei." },
+            { day: 18, country: "Frankreich", greeting: "Joyeux Noël", icon: "🇫🇷", text: "In Frankreich ist das Essen (Le Réveillon) der Höhepunkt. Es gibt oft Austern, Foie Gras und als Dessert den 'Bûche de Noël', einen Kuchen in Form eines Holzscheits." },
+            { day: 19, country: "Griechenland", greeting: "Kala Christougenna", icon: "🇬🇷", text: "In Griechenland ziehen Kinder am 24. Dezember mit Triangeln von Haus zu Haus und singen 'Kalanda' (Lobgesänge), um Segen für das Haus zu bringen." },
+            { day: 20, country: "Irland", greeting: "Nollaig Shona Duit", icon: "🇮🇪", text: "In Irland stellt man traditionell eine rote Kerze ins Fenster, um Maria und Josef symbolisch Obdach zu gewähren. Oft bleiben die Weihnachtsdekorationen bis zum 'Little Christmas' am 6. Januar." },
+            { day: 21, country: "Finnland", greeting: "Hyvää Joulua", icon: "🇫🇮", text: "Weihnachten ist hier das Fest der Ruhe. Ein wichtiger Brauch ist der Besuch der Sauna am Heiligabend vor dem Festessen." },
+            { day: 22, country: "Spanien", greeting: "Feliz Navidad!", icon: "🇪🇸", text: "Heute findet die größte Lotterie der Welt statt: 'El Gordo'. Traditionell werden die Gewinnzahlen von Schulkindern live im Fernsehen gesungen. Ein riesiges Ereignis für das ganze Land!" },
+            { day: 23, country: "Dänemark", greeting: "Glædelig Jul!", icon: "🇩🇰", text: "Heute ist 'Lille juleaften' (Kleiner Weihnachtsabend). Man schmückt in Ruhe den Baum und bereitet sich ohne Stress auf das große Fest vor." },
+            { day: 24, country: "Europa", greeting: "Frohe Weihnachten", icon: "🇪🇺", text: "Heute feiern wir alle gemeinsam! Egal ob Karpfen, Truthahn oder Würstchen, ob 6. Dezember oder 6. Januar – wir wünschen dir und deiner Familie ein besinnliches Fest!" }
+        ];
+
+        const currentYear = new Date().getFullYear();
+
+        // --- 3. INIT LOGIK ---
+        function initCalendar() {
+            const grid = document.getElementById('calendar-grid');
+
+            calendarData.forEach(data => {
+                const doorEl = document.createElement('div');
+                doorEl.className = 'door-container';
+                doorEl.id = `door-${data.day}`;
+
+                doorEl.innerHTML = `
+                    <div class="door-front">
+                        <div class="ribbon-v"></div>
+                        <div class="ribbon-h"></div>
+                        <span class="door-number">${data.day}</span>
+                    </div>
+                    <div class="door-back">
+                        <div class="country-code">${data.icon}</div>
+                        <div class="click-hint">Ansehen</div>
+                    </div>
+                `;
+
+                // Status prüfen (ob bereits geöffnet)
+                const isOpenedBefore = localStorage.getItem(`eu_door_${currentYear}_${data.day}`);
+                if (isOpenedBefore) {
+                    doorEl.classList.add('open');
+                }
+
+                // Klick Event (Eine zentrale Funktion)
+                doorEl.onclick = () => handleDoorClick(doorEl, data);
+
+                grid.appendChild(doorEl);
+            });
+        }
+
+        // --- 4. ZENTRALE KLICK LOGIK ---
+        function handleDoorClick(element, data) {
+            const now = new Date();
+            const currentMonth = now.getMonth(); // 11 = Dezember
+            const currentDay = now.getDate();
+
+            // 1. Fall: TEST MODUS ist an -> Immer öffnen
+            if (TEST_MODUS) {
+                forceOpen(element, data);
+                return;
+            }
+
+            // 2. Fall: Noch nicht Dezember (Januar-November)
+            // Hinweis: Wir erlauben das Ansehen von alten Kalendern (z.B. im Januar) nicht, 
+            // es sei denn, du willst es. Hier: Strikt zu vor Dez.
+            if (currentMonth !== 11) {
+                // Wenn es VOR Dezember ist (z.B. November)
+                // Ausnahme: Wenn es Januar ist, könnte man argumentieren, dass es vorbei ist.
+                // Wir gehen davon aus: Vor Dez 1. ist alles zu.
+                showLocked(element, data.day, true); // true = Vor Dezember
+                return;
+            }
+
+            // 3. Fall: Dezember, aber Tag liegt in Zukunft
+            if (data.day > currentDay) {
+                showLocked(element, data.day, false); // false = Im Dezember, aber zu früh
+                return;
+            }
+
+            // 4. Fall: Tag ist gültig (Heute oder Vergangenheit)
+            forceOpen(element, data);
+        }
+
+        function forceOpen(element, data) {
+            // Wenn schon offen: Nur Modal zeigen (keine Animation/Konfetti)
+            if (element.classList.contains('open')) {
+                showModal(data);
+            } else {
+                // Erstmaliges Öffnen
+                element.classList.add('open');
+                localStorage.setItem(`eu_door_${currentYear}_${data.day}`, 'true');
+                fireConfetti();
+                setTimeout(() => {
+                    showModal(data);
+                }, 800);
+            }
+        }
+
+        function showLocked(element, day, isPreDecember) {
+            // Wackeln
+            element.classList.remove('shake');
+            void element.offsetWidth; // Reflow trigger
+            element.classList.add('shake');
+
+            // Modal Locked
+            const header = document.getElementById('modal-header-content');
+            const body = document.getElementById('modal-body-content');
+
+            let title = "Noch verschlossen!";
+            let message = `Dieses Türchen öffnet sich erst am <strong>${day}. Dezember</strong>.`;
+
+            if (isPreDecember) {
+                title = "Noch nicht Dezember!";
+                message = "Geduld! Der Adventskalender beginnt erst am <strong>1. Dezember</strong>.";
+            }
+
+            header.innerHTML = `<h2 class="country-title" style="color:#ef4444">${title}</h2>`;
+            body.innerHTML = `
+                <div class="modal-icon">🔒</div>
+                <p class="modal-text">${message}</p>
+                <div id="timer">Berechne...</div>
+            `;
+
+            document.getElementById('modal').classList.add('active');
+            startTimer(day);
+        }
+
+        function showModal(data) {
+            const header = document.getElementById('modal-header-content');
+            const body = document.getElementById('modal-body-content');
+
+            header.innerHTML = `
+                <h2 class="country-title">${data.country}</h2>
+                <div class="native-greeting">${data.greeting}</div>
+            `;
+
+            body.innerHTML = `
+                <div class="modal-icon">${data.icon}</div>
+                <div class="modal-text">
+                    ${data.text}
+                </div>
+                <div class="modal-fact">
+                    <i class="fas fa-info-circle" style="color:var(--gold)"></i> 
+                    <strong>Wusstest du?</strong><br>
+                    Jedes Land in Europa hat seine ganz eigene Art, die Weihnachtszeit zu feiern.
+                </div>
+            `;
+
+            document.getElementById('modal').classList.add('active');
+            if (window.timerInterval) clearInterval(window.timerInterval);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            if (window.timerInterval) clearInterval(window.timerInterval);
+        }
+
+        // Timer Logik
+        function startTimer(day) {
+            if (window.timerInterval) clearInterval(window.timerInterval);
+
+            const now = new Date();
+            let targetYear = currentYear;
+
+            // Wenn wir im November sind, ist das Ziel dieses Jahr Dez.
+            // Wenn wir im Dezember sind, ist das Ziel dieses Jahr Dez (Tag X).
+            // Wenn wir im Januar sind, ist das Ziel erst nächstes Jahr (theoretisch).
+
+            const target = new Date(targetYear, 11, day); // 11 = Dez
+
+            const update = () => {
+                const nowNow = new Date();
+                const diff = target - nowNow;
+
+                const el = document.getElementById('timer');
+                if (!el) return;
+
+                if (diff <= 0) {
+                    el.innerText = "JETZT!";
+                    clearInterval(window.timerInterval);
+                    return;
+                }
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // Zeige Tage an, wenn es noch lange hin ist (z.B. im November)
+                if (d > 0) {
+                    el.innerText = `${d}T ${h}h ${m}m ${s}s`;
+                } else {
+                    el.innerText = `${h}h ${m}m ${s}s`;
+                }
+            };
+            update();
+            window.timerInterval = setInterval(update, 1000);
+        }
+
+        // Overlay Click Close
+        window.onclick = (e) => {
+            if (e.target == document.getElementById('modal')) closeModal();
+        }
+
+        // --- 5. EFFEKTE ---
+        function createSnow() {
+            const container = document.getElementById('snow-container');
+            const symbols = ['❄', '❅', '❆', '·'];
+
+            setInterval(() => {
+                const f = document.createElement('div');
+                f.classList.add('snowflake');
+                f.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                f.style.left = Math.random() * 100 + 'vw';
+                f.style.animationDuration = Math.random() * 5 + 5 + 's';
+                f.style.fontSize = Math.random() * 15 + 10 + 'px';
+                f.style.opacity = Math.random() * 0.7 + 0.3;
+
+                container.appendChild(f);
+                setTimeout(() => f.remove(), 10000);
+            }, 200);
+        }
+
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#fbbf24', '#dc2626', '#ffffff', '#3b82f6']; // Gold, Rot, Weiß, Blau
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    r: Math.random() * 4 + 2,
+                    dx: Math.random() * 10 - 5,
+                    dy: Math.random() * 10 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, idx) => {
+                    p.x += p.dx; p.y += p.dy; p.dy += 0.15; p.life -= 1.5;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                    if (p.life <= 0) particles.splice(idx, 1);
+                });
+                if (particles.length > 0) requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        
+
+
+        // Start
+        createSnow();
+        initCalendar();
+    </script>
+</body>
+
+</html>
